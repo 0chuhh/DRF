@@ -1,3 +1,4 @@
+from ast import Delete
 from urllib import response
 from django.shortcuts import render
 from rest_framework import generics
@@ -14,17 +15,57 @@ from .models import Women
 #     queryset = Women.objects.all()
 #     serializer_class = WomenSerializer
 
+class WomenAPIList(generics.ListCreateAPIView):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer
+
+
+class WomenAPIUpdate(generics.UpdateAPIView):
+    queryset = Women.objects.all()
+    serializer_class = WomenSerializer 
+
 
 class WomenApiView(APIView):
     def get(self, request):
-        lst = Women.objects.all().values()
-        return Response({'posts': list(lst)})
+        w = Women.objects.all()
+        return Response({'posts': WomenSerializer(w, many=True).data})
 
     
     def post(self, request):
-        post_new = Women.objects.create(
-            title=request.data['title'],
-            content=request.data['content'],
-            cat_id=request.data['cat_id']
-        )
-        return Response({'posts': model_to_dict(post_new)})
+        serializer = WomenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({'posts': serializer.data})
+
+    
+    def put(self, request, *args, **kwargs):
+        pk = request.data.get("pk", None)
+        if not pk:
+            pk = kwargs.get("pk", None)
+            if not pk:
+                return Response({"error": "Method Put is not allowed"})
+
+        try:
+            instance = Women.objects.get(pk=pk)
+
+        except:
+            return Response({"error": "Method Put is not allowed"})
+
+        serializer = WomenSerializer(data=request.data, instance=instance)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"Posts": serializer.data})
+
+    def delete(self, request, *args, **kwargs):
+        pk = kwargs.get("pk", None)
+        if not pk:
+            return Response({"error": "Method Put is not allowed"})
+        try:
+            instance = Women.objects.get(pk=pk)
+            instance.delete()
+        except:
+            return Response({"somthing wrong"})
+
+        return Response({"deleted": WomenSerializer(instance).data})
+        
+
