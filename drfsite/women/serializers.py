@@ -1,4 +1,5 @@
 from dataclasses import fields
+from email.policy import default
 from json import JSONDecoder
 from rest_framework import serializers
 from rest_framework.renderers import JSONRenderer
@@ -14,9 +15,10 @@ import io
 
 
 class WomenSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     class Meta:
         model = Women
-        fields = ("title", "content", "cat", "id") 
+        fields = ("title", "content", "cat", "id", "user") 
 
 
 # class WomenSerializer(serializers.Serializer):
